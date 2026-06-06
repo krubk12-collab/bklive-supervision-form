@@ -97,7 +97,7 @@
                         <input type="text" id="evalDept" name="evalDept" class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent" readonly>
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <label class="whitespace-nowrap font-semibold">ระดับชั้น (ที่ปรึกษา):</label>
+                        <label class="whitespace-nowrap font-semibold">ระดับชั้น (ที่สอน):</label>
                         <input type="text" id="evalClass" name="evalClass" required class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent">
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -361,7 +361,7 @@
             // อัปเดตตำแหน่ง, กลุ่มสาระ, ชั้น
             posInput.value = t.position || "";
             deptInput.value = t.department || "";
-            classInput.value = t.homeroom_class_id || "";
+            classInput.value = ""; // "ระดับชั้น (ที่สอน)" — ให้ครูระบุห้องที่สอนเอง ไม่ดึง homeroom (ห้องที่ปรึกษา)
 
             // ซ่อน dropdown และแสดง text input เพื่อให้ดูเหมือนพิมพ์เข้ามา (ตอนพิมพ์เอกสาร)
             select.classList.remove('print:hidden');
