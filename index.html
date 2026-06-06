@@ -94,7 +94,7 @@
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                         <label class="whitespace-nowrap font-semibold">กลุ่มสาระการเรียนรู้:</label>
-                        <input type="text" id="evalDept" name="evalDept" class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent" readonly>
+                        <input type="text" id="evalDept" name="evalDept" class="w-full border-b border-gray-300 outline-none p-1" placeholder="ระบุกลุ่มสาระ">
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                         <label class="whitespace-nowrap font-semibold">ระดับชั้น (ที่สอน):</label>
@@ -360,7 +360,7 @@
 
             // อัปเดตตำแหน่ง, กลุ่มสาระ, ชั้น
             posInput.value = t.position || "";
-            deptInput.value = t.department || "";
+            deptInput.value = ""; // ไม่ดึง department (เก็บเป็น "มัธยมศึกษา") — ให้ครูระบุกลุ่มสาระเอง
             classInput.value = ""; // "ระดับชั้น (ที่สอน)" — ให้ครูระบุห้องที่สอนเอง ไม่ดึง homeroom (ห้องที่ปรึกษา)
 
             // ซ่อน dropdown และแสดง text input เพื่อให้ดูเหมือนพิมพ์เข้ามา (ตอนพิมพ์เอกสาร)
