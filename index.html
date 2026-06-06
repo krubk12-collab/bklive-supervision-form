@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แบบประเมินการนิเทศการสอน PACAKIDs Model</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Sarabun', sans-serif; background-color: #f1f5f9; }
+
+        /* CSS สำหรับการพิมพ์ */
+        @media print {
+            body { background-color: white; padding: 0; margin: 0; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .max-w-5xl { max-width: 100% !important; box-shadow: none !important; margin: 0 !important; border: none !important; }
+            .border, .border-gray-300, .bg-blue-50, .shadow-sm { border: none !important; background: transparent !important; box-shadow: none !important; }
+            input[type="text"], input[type="date"], textarea, select { border: none !important; border-bottom: 1px dotted #000 !important; border-radius: 0 !important; padding: 0 !important; background: transparent !important; appearance: none; -moz-appearance: none; -webkit-appearance: none; }
+            textarea { resize: none; overflow: hidden; }
+
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid black !important; padding: 4px 8px !important; font-size: 14pt; }
+            th { background-color: white !important; color: black !important; -webkit-print-color-adjust: exact; }
+            .print-page-break { page-break-before: always; }
+            .print-header { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 20px; }
+            .text-sm { font-size: 14pt !important; }
+            .bg-gray-100 { background-color: transparent !important; }
+            .print\:p-0 { padding: 0 !important; }
+
+            input[type="radio"] { display: none; }
+        }
+        .print-only { display: none; }
+        input[type="radio"]:checked + span.print-only { display: block; font-weight: bold; }
+    </style>
+</head>
+<body class="p-2 sm:p-6">
+    <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 relative">
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="absolute inset-0 bg-white/80 z-50 flex flex-col items-center justify-center hidden">
+            <i class="fa-solid fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+            <p class="text-gray-700 font-bold">กำลังโหลดข้อมูลครูจากระบบ...</p>
+        </div>
+
+        <!-- Header (เว็บ) -->
+        <div class="bg-blue-700 text-white p-6 sm:p-10 text-center no-print">
+            <h1 class="text-2xl sm:text-3xl font-bold mb-2">แบบประเมินการนิเทศการสอน</h1>
+            <p class="text-blue-100 text-lg">เพื่อพัฒนาการจัดการเรียนรู้เชิงรุก Active Learning ด้วยใช้รูปแบบการนิเทศแบบ PACAKIDs Model</p>
+        </div>
+
+        <form id="evaluation-form" class="p-6 sm:p-10">
+
+            <!-- Header (พิมพ์) -->
+            <div class="text-center mb-8 print-header print-only">
+                <h1 class="text-2xl font-bold">แบบประเมินการนิเทศการสอน</h1>
+                <p class="text-lg">เพื่อพัฒนาการจัดการเรียนรู้เชิงรุก Active Learning ด้วยใช้รูปแบบการนิเทศแบบ PACA Model</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center sm:justify-start gap-4 mb-8 text-base">
+                <div class="flex items-center gap-2">ภาคเรียนที่
+                    <select name="term" class="border-b border-gray-400 outline-none w-20 text-center bg-transparent">
+                        <option value="1" selected>1</option>
+                        <option value="2">2</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">ปีการศึกษา
+                    <select name="year" class="border-b border-gray-400 outline-none w-24 text-center bg-transparent">
+                        <option value="2567">2567</option>
+                        <option value="2568">2568</option>
+                        <option value="2569" selected>2569</option>
+                        <option value="2570">2570</option>
+                        <option value="2571">2571</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">วันที่ประเมิน <input type="date" name="evalDate" required class="border-b border-gray-400 outline-none"></div>
+            </div>
+
+            <!-- ตอนที่ 1: ข้อมูลผู้รับการนิเทศ -->
+            <div class="mb-8">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 bg-gray-100 p-2 rounded print:bg-transparent print:p-0 border-l-4 border-blue-600 print:border-none">ตอนที่ 1 ข้อมูลผู้รับการนิเทศ</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="whitespace-nowrap font-semibold">ชื่อ-นามสกุล:</label>
+                        <select id="evalNameSelect" onchange="autoFillEvaluatee()" class="w-full border-b border-gray-300 outline-none p-1 bg-transparent no-print">
+                            <option value="">-- เลือกผู้รับการนิเทศ --</option>
+                        </select>
+                        <input type="text" id="evalName" name="evalName" required class="w-full border-b border-gray-300 outline-none p-1 print-only" readonly>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="whitespace-nowrap font-semibold">ตำแหน่ง:</label>
+                        <input type="text" id="evalPosition" name="evalPosition" required class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent" readonly>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="whitespace-nowrap font-semibold">กลุ่มสาระการเรียนรู้:</label>
+                        <input type="text" id="evalDept" name="evalDept" class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent" readonly>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="whitespace-nowrap font-semibold">ระดับชั้น (ที่ปรึกษา):</label>
+                        <input type="text" id="evalClass" name="evalClass" required class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent">
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="whitespace-nowrap font-semibold">รายวิชา (ที่ประเมิน):</label>
+                        <input type="text" name="subjectName" required class="w-full border-b border-gray-300 outline-none p-1">
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="whitespace-nowrap font-semibold">รหัสวิชา:</label>
+                        <input type="text" name="subjectCode" class="w-full border-b border-gray-300 outline-none p-1">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ตอนที่ 2: ข้อมูลผู้นิเทศ -->
+            <div class="mb-8">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 bg-gray-100 p-2 rounded print:bg-transparent print:p-0 border-l-4 border-blue-600 print:border-none">ตอนที่ 2 ข้อมูลผู้นิเทศ</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="whitespace-nowrap font-semibold">ชื่อ-นามสกุล:</label>
+                        <select id="assessorSelect" onchange="autoFillAssessor()" class="w-full border-b border-gray-300 outline-none p-1 bg-transparent no-print">
+                            <option value="">-- เลือกผู้นิเทศ --</option>
+                            <!-- จะมี options เข้ามาใส่ผ่าน Javascript -->
+                        </select>
+                        <input type="text" id="assessorName" name="assessorName" required class="w-full border-b border-gray-300 outline-none p-1 hidden print:block" placeholder="ระบุชื่อ-นามสกุล">
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+                        <label class="whitespace-nowrap font-semibold">ตำแหน่ง:</label>
+                        <input type="text" id="assessorPosition" name="assessorPosition" required class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent" readonly>
+                    </div>
+                </div>
+            </div>
+
+            <!-- คำอธิบาย (พิมพ์) -->
+            <div class="mb-4 text-sm print-only">
+                <p class="font-bold">คำอธิบายการประเมินระดับคุณภาพของการปฏิบัติเพื่อการจัดการเรียนรู้</p>
+                <div class="grid grid-cols-2 gap-2 mt-2 ml-4">
+                    <div>5 หมายถึง คุณภาพการปฏิบัติอยู่ในระดับ ดีมาก</div>
+                    <div>4 หมายถึง คุณภาพการปฏิบัติอยู่ในระดับ ดี</div>
+                    <div>3 หมายถึง คุณภาพการปฏิบัติอยู่ในระดับ ปานกลาง</div>
+                    <div>2 หมายถึง คุณภาพการปฏิบัติอยู่ในระดับ พอใช้</div>
+                    <div>1 หมายถึง คุณภาพการปฏิบัติอยู่ในระดับ ควรปรับปรุง</div>
+                </div>
+                <p class="mt-2 text-gray-600 italic">หมายเหตุ หากไม่มีการปฏิบัติในกิจกรรมดังกล่าว ไม่ต้องลงคะแนนการประเมินข้อนั้น ๆ</p>
+            </div>
+
+            <!-- ตอนที่ 3: บันทึกการนิเทศการสอน -->
+            <div class="mb-8">
+                <h2 class="text-lg font-bold text-gray-800 mb-2 bg-gray-100 p-2 rounded print:bg-transparent print:p-0 border-l-4 border-blue-600 print:border-none">ตอนที่ 3 บันทึกการนิเทศการสอน</h2>
+                <p class="text-sm text-gray-600 mb-4 no-print bg-yellow-50 p-2 rounded border border-yellow-200">
+                    <i class="fa-solid fa-circle-info text-yellow-500 mr-1"></i> เกณฑ์: 5 = ดีมาก, 4 = ดี, 3 = ปานกลาง, 2 = พอใช้, 1 = ควรปรับปรุง
+                </p>
+                <div class="overflow-x-auto rounded-lg border border-gray-300 print:border-none print:rounded-none">
+                    <table class="w-full border-collapse text-sm text-gray-800">
+                        <thead class="bg-blue-50 print:bg-transparent border-b-2 border-gray-300">
+                            <tr>
+                                <th class="border-r border-gray-300 p-3 text-left w-3/4">รายการนิเทศ</th>
+                                <th class="border-r border-gray-300 p-3 w-10 text-center">5</th>
+                                <th class="border-r border-gray-300 p-3 w-10 text-center">4</th>
+                                <th class="border-r border-gray-300 p-3 w-10 text-center">3</th>
+                                <th class="border-r border-gray-300 p-3 w-10 text-center">2</th>
+                                <th class="p-3 w-10 text-center">1</th>
+                            </tr>
+                        </thead>
+                        <tbody id="evaluation-tbody" class="divide-y divide-gray-200">
+                            <!-- JS จะเติมตารางตรงนี้ -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="print-page-break"></div>
+
+            <!-- ตอนที่ 4: ผลการนิเทศการสอน -->
+            <div class="mb-8 p-6 bg-emerald-50 rounded-lg print:p-0 border border-emerald-100 print:border-none">
+                <h2 class="text-lg font-bold text-emerald-800 print:text-black mb-4 border-b-2 border-emerald-200 pb-2 print:border-black flex items-center">
+                    <i class="fa-solid fa-square-poll-vertical mr-2 no-print"></i> ตอนที่ 4 ผลการนิเทศการสอน
+                </h2>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                    <div class="text-2xl font-bold text-gray-800">
+                        สรุปคะแนนคุณภาพ: <span id="totalScore" class="text-emerald-600 underline print:text-black">0</span> <span class="text-base font-normal text-gray-500">/ 80</span>
+                    </div>
+                    <div class="text-xl font-bold bg-white px-4 py-2 rounded shadow-sm print:shadow-none print:px-0" id="qualityLabel">
+                        ระดับคุณภาพ: <span class="text-gray-500">-</span>
+                    </div>
+                </div>
+
+                <p class="text-sm font-bold mb-2 print:mt-4">เกณฑ์เปรียบเทียบระดับคุณภาพการปฏิบัติ</p>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm text-center">
+                    <div class="p-3 border-2 border-gray-200 rounded-lg bg-white" id="lvl5">65-80<br><span class="text-lg font-bold mt-1 block">ดีเยี่ยม</span></div>
+                    <div class="p-3 border-2 border-gray-200 rounded-lg bg-white" id="lvl4">49-64<br><span class="text-lg font-bold mt-1 block">ดีมาก</span></div>
+                    <div class="p-3 border-2 border-gray-200 rounded-lg bg-white" id="lvl3">33-48<br><span class="text-lg font-bold mt-1 block">ดี</span></div>
+                    <div class="p-3 border-2 border-gray-200 rounded-lg bg-white" id="lvl2">17-32<br><span class="text-lg font-bold mt-1 block">พอใช้</span></div>
+                    <div class="p-3 border-2 border-gray-200 rounded-lg bg-white" id="lvl1">ต่ำกว่า 16<br><span class="text-lg font-bold mt-1 block">ควรปรับปรุง</span></div>
+                </div>
+            </div>
+
+            <!-- ตอนที่ 5: บันทึกเพิ่มเติม -->
+            <div class="mb-12">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 bg-gray-100 p-2 rounded print:bg-transparent print:p-0 border-l-4 border-blue-600 print:border-none">ตอนที่ 5 บันทึกเพิ่มเติม</h2>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block font-bold mb-2 text-gray-700">จุดเด่นในการจัดกิจกรรมการเรียนรู้:</label>
+                        <textarea name="strengths" rows="4" class="w-full border border-gray-300 rounded-md p-3 outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 print:bg-transparent"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-2 text-gray-700">จุดควรพัฒนา:</label>
+                        <textarea name="improvements" rows="4" class="w-full border border-gray-300 rounded-md p-3 outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 print:bg-transparent"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ลายเซ็นต์ -->
+            <div class="print-only mt-20 px-10">
+                <div class="flex justify-between text-center mb-24">
+                    <div>
+                        <p>ลงชื่อ............................................................ผู้รับการนิเทศการสอน</p>
+                        <p class="mt-4" id="print-evalName">(............................................................)</p>
+                    </div>
+                    <div>
+                        <p>ลงชื่อ............................................................ผู้นิเทศการสอน</p>
+                        <p class="mt-4" id="print-assessorName">(............................................................)</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p>ลงชื่อ............................................................</p>
+                    <p class="mt-4">(นายพนมพร พีระพิทยมงคล)</p>
+                    <p>ผู้อำนวยการโรงเรียนชุมชนวัดบางโค (แม่นางวิทย์อุปการี)</p>
+                </div>
+            </div>
+
+            <!-- ปุ่มดำเนินการ -->
+            <div class="flex flex-col sm:flex-row justify-end gap-4 no-print border-t pt-6 mt-8">
+                <button type="button" onclick="prepareAndPrint()" class="px-6 py-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 flex items-center justify-center font-medium shadow-sm transition-colors text-gray-700">
+                    <i class="fa-solid fa-print mr-2"></i> พิมพ์ / Save PDF
+                </button>
+                <button type="submit" id="submit-btn" class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center font-bold shadow-md transition-colors">
+                    <i class="fa-solid fa-floppy-disk mr-2"></i> บันทึกข้อมูล
+                </button>
+            </div>
+
+            <!-- แจ้งเตือน -->
+            <div id="status-msg" class="hidden mt-6 p-4 rounded-lg text-center font-bold no-print transition-all"></div>
+        </form>
+    </div>
+
+    <script>
+        // 🚨 อัปเดตลิงก์ Web App ตรงนี้ 🚨
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwMWJrqTBRVngn-7THkrptWjbBC803G4kdGaPpRRL_7DEMObj7v0G4JOCAqekTocnVQCA/exec';
+        // ⚡ CDN snapshot — โหลดรายชื่อครูเร็ว ~0.2s (อัปเดตทุก ~30 นาที), fallback ไป GAS อัตโนมัติ
+        const SUPERVISION_CDN = 'https://krubk12-collab.github.io/bk-data/supervision.json';
+
+        let teachersData = [];
+
+        // โหลดรายชื่อครูเมื่อเปิดหน้าเว็บ
+        window.onload = async () => {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.remove('hidden');
+
+            try {
+                let data = null;
+                // ⚡ ลอง CDN ก่อน (เร็ว ~0.2s) — ไม่ได้ค่อย fallback ไป GAS (~5s)
+                try {
+                    const cdnRes = await fetch(SUPERVISION_CDN, { cache: 'no-cache' });
+                    if (cdnRes.ok) { const cd = await cdnRes.json(); if (cd && cd.status === 'success') data = cd; }
+                } catch(e) {}
+                if (!data) { const res = await fetch(WEB_APP_URL); data = await res.json(); }
+
+                if (data.status === 'success' && data.teacherData) {
+
+                    // กรองชื่อผู้บริหารออกจากข้อมูลที่ดึงมา (เผื่อมีการเพิ่มชื่อซ้ำลงในชีต)
+                    let onlyTeachers = data.teacherData.filter(t =>
+                        !(t.first_name && t.first_name.includes("พนมพร")) &&
+                        !(t.first_name && t.first_name.includes("ศิริวรรณ"))
+                    );
+
+                    teachersData = onlyTeachers;
+                    const teacherCount = teachersData.length;
+
+                    // 🎯 ฝังข้อมูล ผอ. และ รอง ผอ. ต่อท้ายเข้าไปในระบบ เพื่อใช้สร้างตัวเลือกและดึงตำแหน่ง
+                    teachersData.push({
+                        prefix: "นาย", first_name: "พนมพร", last_name: "พีระพิทยมงคล",
+                        position: "ผู้อำนวยการโรงเรียน", department: "-", homeroom_class_id: "-"
+                    });
+                    const dir1Index = teachersData.length - 1; // Index ของ ผอ.
+
+                    teachersData.push({
+                        prefix: "นาง", first_name: "ศิริวรรณ", last_name: "โพธิ์ทอง",
+                        position: "รองผู้อำนวยการโรงเรียน", department: "-", homeroom_class_id: "-"
+                    });
+                    const dir2Index = teachersData.length - 1; // Index ของ รอง ผอ.
+
+                    // ส่ง Index ไปสร้าง Dropdown
+                    populateDropdowns(teacherCount, dir1Index, dir2Index);
+                }
+            } catch (err) {
+                console.error("โหลดข้อมูลครูไม่สำเร็จ", err);
+                alert("ไม่สามารถโหลดรายชื่อครูได้ กรุณารีเฟรชหน้าเว็บ");
+            } finally {
+                overlay.classList.add('hidden');
+            }
+        };
+
+        // ฟังก์ชันสร้างตัวเลือกใน Dropdown
+        function populateDropdowns(teacherCount, dir1Idx, dir2Idx) {
+            const evalSelect = document.getElementById('evalNameSelect');
+            const assessorSelect = document.getElementById('assessorSelect');
+
+            // ล้างตัวเลือกเดิม
+            evalSelect.innerHTML = '<option value="">-- เลือกผู้รับการนิเทศ --</option>';
+            assessorSelect.innerHTML = '<option value="">-- เลือกผู้นิเทศ --</option>';
+
+            // 1. ใส่ชื่อผู้รับการนิเทศ (ดึงเฉพาะครู ไม่ดึงผู้บริหารมาใส่ตรงนี้)
+            for(let i = 0; i < teacherCount; i++) {
+                const t = teachersData[i];
+                const nameStr = `${t.prefix || ''}${t.first_name} ${t.last_name}`;
+                evalSelect.add(new Option(nameStr, i));
+            }
+
+            // 2. ใส่ชื่อผู้นิเทศ (ปักหมุด ผอ. / รอง ผอ. ไว้เป็นกลุ่มแรกสุดเสมอ)
+            const groupDir = document.createElement('optgroup');
+            groupDir.label = "ผู้บริหาร";
+            groupDir.appendChild(new Option("นายพนมพร พีระพิทยมงคล", dir1Idx));
+            groupDir.appendChild(new Option("นางศิริวรรณ โพธิ์ทอง", dir2Idx));
+            assessorSelect.appendChild(groupDir);
+
+            const groupTeacher = document.createElement('optgroup');
+            groupTeacher.label = "ครูและบุคลากร";
+            for(let i = 0; i < teacherCount; i++) {
+                const t = teachersData[i];
+                const nameStr = `${t.prefix || ''}${t.first_name} ${t.last_name}`;
+                groupTeacher.appendChild(new Option(nameStr, i));
+            }
+            assessorSelect.appendChild(groupTeacher);
+
+            // เพิ่มตัวเลือกบุคคลภายนอกต่อท้าย
+            const otherOption = new Option("+ บุคคลภายนอก / ระบุเอง", "other");
+            otherOption.className = "font-bold text-blue-600";
+            assessorSelect.appendChild(otherOption);
+        }
+
+        // เมื่อเลือกชื่อผู้รับการนิเทศ
+        function autoFillEvaluatee() {
+            const select = document.getElementById('evalNameSelect');
+            const hiddenInput = document.getElementById('evalName');
+            const posInput = document.getElementById('evalPosition');
+            const deptInput = document.getElementById('evalDept');
+            const classInput = document.getElementById('evalClass');
+
+            if (select.value === "") {
+                hiddenInput.value = ""; posInput.value = ""; deptInput.value = ""; classInput.value = "";
+                return;
+            }
+
+            const t = teachersData[select.value];
+            const fullName = `${t.prefix}${t.first_name} ${t.last_name}`;
+
+            // อัปเดตช่องที่ต้องส่งฟอร์ม และแสดงตอนพิมพ์
+            hiddenInput.value = fullName;
+            document.getElementById('print-evalName').innerText = `(${fullName})`;
+
+            // อัปเดตตำแหน่ง, กลุ่มสาระ, ชั้น
+            posInput.value = t.position || "";
+            deptInput.value = t.department || "";
+            classInput.value = t.homeroom_class_id || "";
+
+            // ซ่อน dropdown และแสดง text input เพื่อให้ดูเหมือนพิมพ์เข้ามา (ตอนพิมพ์เอกสาร)
+            select.classList.remove('print:hidden');
+        }
+
+        // เมื่อเลือกชื่อผู้นิเทศ
+        function autoFillAssessor() {
+            const select = document.getElementById('assessorSelect');
+            const nameInput = document.getElementById('assessorName');
+            const posInput = document.getElementById('assessorPosition');
+
+            if (select.value === "other") {
+                // ถ้าเลือกภายนอก/อื่นๆ ให้ซ่อน dropdown แล้วโชว์ช่องกรอก
+                select.classList.add('hidden');
+                nameInput.classList.remove('hidden');
+                nameInput.value = "";
+                nameInput.readOnly = false;
+                nameInput.classList.remove('bg-gray-50');
+
+                posInput.value = "";
+                posInput.readOnly = false;
+                posInput.classList.remove('bg-gray-50');
+                posInput.placeholder = "ระบุตำแหน่ง";
+
+                document.getElementById('print-assessorName').innerText = "(............................................................)";
+            } else if (select.value !== "") {
+                // จะดึงจากข้อมูลครู หรือ ข้อมูลผู้บริหารที่ฝังไว้ ก็ทำงานได้แบบเดียวกัน
+                const t = teachersData[select.value];
+                const fullName = `${t.prefix}${t.first_name} ${t.last_name}`;
+
+                nameInput.value = fullName;
+                posInput.value = t.position || "";
+                posInput.readOnly = true;
+                posInput.classList.add('bg-gray-50');
+
+                document.getElementById('print-assessorName').innerText = `(${fullName})`;
+            } else {
+                nameInput.value = "";
+                posInput.value = "";
+                posInput.readOnly = true;
+                posInput.classList.add('bg-gray-50');
+            }
+        }
+
+        // ก่อนพิมพ์ให้จัดเตรียมข้อมูลให้แสดงผลถูก
+        function prepareAndPrint() {
+            const assSelect = document.getElementById('assessorSelect');
+            const assNameInput = document.getElementById('assessorName');
+
+            // ถ้าผู้นิเทศไม่ได้เลือก "อื่นๆ" ให้โชว์ค่าจาก dropdown ไปที่ input ซ่อนไว้ชั่วคราวเพื่อให้มันพิมพ์ออกมาได้
+            if(assSelect.value !== "other" && assSelect.value !== "") {
+                assSelect.classList.add('print:hidden');
+                assNameInput.classList.remove('hidden');
+            }
+
+            // ดึงชื่อมารอตรงลายเซ็นต์
+            const ename = document.getElementById('evalName').value;
+            const aname = document.getElementById('assessorName').value;
+            if(ename) document.getElementById('print-evalName').innerText = `(${ename})`;
+            if(aname) document.getElementById('print-assessorName').innerText = `(${aname})`;
+
+            window.print();
+
+            // คืนค่ากลับหลังปริ้นเสร็จ
+            setTimeout(() => {
+                if(assSelect.value !== "other") {
+                    assSelect.classList.remove('print:hidden');
+                    assNameInput.classList.add('hidden');
+                }
+            }, 1000);
+        }
+
+        // ---------------- โค้ดสร้างตาราง 16 ข้อ ----------------
+        const formItems = [
+            { id: "h1", title: "1. ด้านจุดประสงค์/เป้าหมายการจัดการเรียนรู้", type: "header" },
+            { id: "q1_1", text: "1.1 ออกแบบหน่วยการเรียนรู้สอดคล้องกับมาตรฐานการเรียนรู้ และตัวชี้วัด/ผลการเรียนรู้" },
+            { id: "q1_2", text: "1.2 วางแผนการจัดการเรียนรู้มุ่งเน้นการจัดการเรียนรู้เชิงรุก Active Learning" },
+            { id: "h2", title: "2. ด้านเนื้อหา", type: "header" },
+            { id: "q2_1", text: "2.1 มีความสอดคล้องกับจุดประสงค์/เป้าหมายการจัดการเรียนรู้" },
+            { id: "q2_2", text: "2.2 ส่งเสริมการเรียนรู้ด้วยตนเองและถูกต้องตามหลักวิชาการ" },
+            { id: "q2_3", text: "2.3 จัดลำดับเนื้อหาและขั้นตอนในการนำเสนอได้อย่างเหมาะสมกับวัย และระดับการเรียนรู้ของผู้เรียน" },
+            { id: "h3", title: "3. ด้านกิจกรรมการจัดการเรียนรู้", type: "header" },
+            { id: "h3_1", title: "ขั้นนำ", type: "subheader" },
+            { id: "q3_1", text: "3.1 มีการตรวจสอบความรู้เดิมของผู้เรียน" },
+            { id: "q3_2", text: "3.2 มีการเชื่อมโยงความรู้กับสถานการณ์ ปัญหา ข้อคำถามที่ท้าทาย สอดคล้องกับความสนใจ และการช่วยเหลือผู้เรียน" },
+            { id: "h3_2", title: "ขั้นสอน", type: "subheader" },
+            { id: "q3_3", text: "3.3 มีการปฏิสัมพันธ์ แลกเปลี่ยนความคิด ปฏิบัติจริง ท้าทายและเหมาะสมกับผู้เรียน" },
+            { id: "q3_4", text: "3.4 การจัดกิจกรรมมีความหลากหลาย ตอบสนองความแตกต่างระหว่างบุคคล และพัฒนาผู้เรียนครบทุกด้าน" },
+            { id: "q3_5", text: "3.5 ครูเป็นผู้ชี้แนะ ชวนคิด ชวนคุย เพื่อให้ผู้เรียนสร้างองค์ความรู้ด้วยตนเอง" },
+            { id: "q3_6", text: "3.6 มีการใช้คำถามกระตุ้นให้ผู้เรียนคิดอย่างมีวิจารณญาณ และคิดสร้างสรรค์" },
+            { id: "h3_3", title: "ขั้นสรุป", type: "subheader" },
+            { id: "q3_7", text: "3.7 มีการส่งเสริมให้ผู้เรียนเกิดทักษะในการนำเสนอ การอภิปรายในกลุ่ม หรือเสนอแนวทางในการปฏิบัติตนในชีวิตประจำวัน" },
+            { id: "h4", title: "4. ด้านการสื่อการเรียนรู้", type: "header" },
+            { id: "q4_1", text: "4.1 มีการเลือกใช้สื่อหรือตัวอย่างที่หลากหลายร่วมในการจัดการเรียนรู้ เหมาะสมกับเนื้อหาจุดประสงค์ กระตุ้นให้ผู้เรียนเกิดการคิดวิเคราะห์" },
+            { id: "q4_2", text: "4.2 มีสื่อที่สามารถใช้ในการทบทวนบทเรียน ตอบสนองการเรียนรู้ที่หลากหลายและมีการเลือกใช้สื่อ ประกอบการจัดการเรียนรู้เชิงรุก Active Learning" },
+            { id: "h5", title: "5. ด้านการวัดและประเมินผล", type: "header" },
+            { id: "q5_1", text: "5.1 ผู้เรียนมีส่วนร่วมในการวัดและประเมินผลการเรียนรู้ของตนเองและเพื่อนร่วมในชั้นเรียน" },
+            { id: "q5_2", text: "5.2 มีวิธีการประเมินผลระหว่างเรียนรู้ที่หลากหลาย เน้นการประเมินผลตามสภาพจริง โดยมีการสังเกตค้นหาข้อผิดพลาดในการปฏิบัติหรือมโนทัศน์ที่คลาดเคลื่อน" }
+        ];
+
+        const tbody = document.getElementById('evaluation-tbody');
+        let html = '';
+        formItems.forEach((item) => {
+            if(item.type === 'header') {
+                html += `<tr class="bg-gray-100 font-bold border-t border-gray-200"><td colspan="6" class="p-3">${item.title}</td></tr>`;
+            } else if(item.type === 'subheader') {
+                html += `<tr><td colspan="6" class="p-2 font-semibold pl-6 text-gray-600 bg-gray-50/50">${item.title}</td></tr>`;
+            } else {
+                html += `<tr class="hover:bg-blue-50/30"><td class="border-r border-gray-200 p-3 pl-8">${item.text}</td>`;
+                [5,4,3,2,1].forEach(score => {
+                    html += `
+                        <td class="border-r border-gray-200 p-3 text-center align-middle">
+                            <label class="cursor-pointer w-full h-full flex items-center justify-center relative">
+                                <input type="radio" name="${item.id}" value="${score}" class="score-radio w-5 h-5 text-blue-600 print:hidden">
+                                <span class="print-only hidden font-bold text-lg absolute">${score}</span>
+                            </label>
+                        </td>`;
+                });
+                html += `</tr>`;
+            }
+        });
+        tbody.innerHTML = html;
+
+        // คำนวณคะแนน
+        document.querySelectorAll('.score-radio').forEach(radio => {
+            radio.addEventListener('change', () => {
+                const checked = document.querySelectorAll('.score-radio:checked');
+                let total = 0;
+                checked.forEach(r => { if (r.value) total += parseInt(r.value); });
+                document.getElementById('totalScore').innerText = total;
+
+                let quality = "ควรปรับปรุง", color = "text-red-500", activeBox = "lvl1";
+                if(total >= 65) { quality = "ดีเยี่ยม"; color = "text-blue-600"; activeBox = "lvl5"; }
+                else if(total >= 49) { quality = "ดีมาก"; color = "text-emerald-600"; activeBox = "lvl4"; }
+                else if(total >= 33) { quality = "ดี"; color = "text-green-500"; activeBox = "lvl3"; }
+                else if(total >= 17) { quality = "พอใช้"; color = "text-orange-500"; activeBox = "lvl2"; }
+
+                document.getElementById('qualityLabel').innerHTML = `ระดับคุณภาพ: <span class="${color}">${quality}</span>`;
+
+                ['lvl1','lvl2','lvl3','lvl4','lvl5'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (id === activeBox) el.className = `p-3 border-2 border-${color.split('-')[1]}-500 rounded-lg bg-${color.split('-')[1]}-50 text-${color.split('-')[1]}-700 shadow-md`;
+                    else el.className = `p-3 border-2 border-gray-200 rounded-lg bg-white text-gray-400`;
+                });
+            });
+        });
+
+        // ---------------- Submit Form ----------------
+        document.getElementById('evaluation-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const msg = document.getElementById('status-msg');
+
+            // ตรวจสอบว่าผู้นิเทศถูกระบุแล้ว (ถ้าเลือกภายนอก)
+            if(document.getElementById('assessorName').value.trim() === "") {
+                alert("กรุณาระบุชื่อผู้นิเทศ");
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังบันทึก...';
+            btn.disabled = true;
+
+            // คัดลอกค่าจาก Dropdown ใส่ Input ก่อนส่ง
+            if(document.getElementById('assessorSelect').value !== "other") {
+                 document.getElementById('assessorName').value = document.getElementById('assessorSelect').options[document.getElementById('assessorSelect').selectedIndex].text;
+            }
+
+            fetch(WEB_APP_URL, { method: 'POST', body: new FormData(this) })
+                .then(res => res.json())
+                .then(data => {
+                    msg.innerHTML = '<i class="fa-solid fa-circle-check text-xl mr-2"></i> บันทึกข้อมูลสำเร็จ!';
+                    msg.className = "mt-6 p-4 rounded-lg text-center font-bold bg-green-100 text-green-700 flex justify-center no-print";
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    this.reset();
+
+                    // เคลียร์ค่าที่แสดงให้กลับสู่ค่าเริ่มต้น
+                    document.getElementById('totalScore').innerText = '0';
+                    document.getElementById('qualityLabel').innerHTML = 'ระดับคุณภาพ: <span class="text-gray-500">-</span>';
+                    document.getElementById('evalName').value = "";
+                    document.getElementById('assessorSelect').classList.remove('hidden');
+                    document.getElementById('assessorName').classList.add('hidden', 'print:block');
+                    document.getElementById('assessorPosition').readOnly = true;
+                    document.getElementById('assessorPosition').classList.add('bg-gray-50');
+
+                    ['lvl1','lvl2','lvl3','lvl4','lvl5'].forEach(id => {
+                        document.getElementById(id).className = `p-3 border-2 border-gray-200 rounded-lg bg-white`;
+                    });
+                    setTimeout(() => msg.classList.add('hidden'), 5000);
+                })
+                .catch(err => {
+                    msg.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-xl mr-2"></i> เกิดข้อผิดพลาด';
+                    msg.className = "mt-6 p-4 rounded-lg text-center font-bold bg-red-100 text-red-700 flex justify-center no-print";
+                })
+                .finally(() => {
+                    btn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-2"></i> บันทึกข้อมูล';
+                    btn.disabled = false;
+                });
+        });
+    </script>
+</body>
+</html>
