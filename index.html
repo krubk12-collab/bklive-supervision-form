@@ -94,7 +94,17 @@
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                         <label class="whitespace-nowrap font-semibold">กลุ่มสาระการเรียนรู้:</label>
-                        <input type="text" id="evalDept" name="evalDept" class="w-full border-b border-gray-300 outline-none p-1" placeholder="ระบุกลุ่มสาระ">
+                        <select id="evalDept" name="evalDept" required class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent cursor-pointer">
+                            <option value="">-- เลือกกลุ่มสาระ --</option>
+                            <option value="ภาษาไทย">ภาษาไทย</option>
+                            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                            <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+                            <option value="สังคมศึกษา ศาสนา และวัฒนธรรม">สังคมศึกษา ศาสนา และวัฒนธรรม</option>
+                            <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                            <option value="ศิลปะ">ศิลปะ</option>
+                            <option value="การงานอาชีพ">การงานอาชีพ</option>
+                            <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                        </select>
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                         <label class="whitespace-nowrap font-semibold">ระดับชั้น (ที่สอน):</label>
@@ -209,6 +219,22 @@
                 </div>
             </div>
 
+            <!-- ลายเซ็นผู้นิเทศ (เซ็นด้วยนิ้ว/สไตลัส) -->
+            <div class="mb-12 no-print">
+                <h2 class="text-lg font-bold text-gray-800 mb-4 bg-gray-100 p-2 rounded border-l-4 border-blue-600">ลายเซ็นผู้นิเทศ (ผู้ประเมิน)</h2>
+                <p class="text-sm text-gray-600 mb-3"><i class="fa-solid fa-pen-nib text-blue-500 mr-1"></i> เซ็นชื่อด้วยนิ้วหรือปากกาสไตลัสในกรอบด้านล่าง (ถ้าไม่เซ็นในระบบ สามารถพิมพ์เอกสารแล้วเซ็นด้วยปากกาได้)</p>
+                <div class="relative inline-block w-full" style="max-width:520px;">
+                    <canvas id="sigCanvas" class="w-full bg-white border-2 border-dashed border-gray-400 rounded-lg cursor-crosshair" style="height:200px; touch-action:none;"></canvas>
+                    <span id="sigPlaceholder" class="absolute inset-0 flex items-center justify-center text-gray-300 text-lg pointer-events-none select-none">✍️ เซ็นที่นี่</span>
+                </div>
+                <div class="mt-3">
+                    <button type="button" onclick="clearSignature()" class="px-4 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 text-gray-700 font-medium shadow-sm">
+                        <i class="fa-solid fa-eraser mr-1"></i> ล้างลายเซ็น
+                    </button>
+                </div>
+                <input type="hidden" name="assessorSignature" id="assessorSignature">
+            </div>
+
             <!-- ลายเซ็นต์ -->
             <div class="print-only mt-20 px-10">
                 <div class="flex justify-between text-center mb-24">
@@ -216,7 +242,8 @@
                         <p>ลงชื่อ............................................................ผู้รับการนิเทศการสอน</p>
                         <p class="mt-4" id="print-evalName">(............................................................)</p>
                     </div>
-                    <div>
+                    <div class="relative">
+                        <img id="print-assessorSign" src="" alt="" class="hidden" style="position:absolute; left:50%; transform:translateX(-50%); top:-48px; max-height:55px;">
                         <p>ลงชื่อ............................................................ผู้นิเทศการสอน</p>
                         <p class="mt-4" id="print-assessorName">(............................................................)</p>
                     </div>
@@ -423,6 +450,12 @@
             if(ename) document.getElementById('print-evalName').innerText = `(${ename})`;
             if(aname) document.getElementById('print-assessorName').innerText = `(${aname})`;
 
+            // นำลายเซ็นที่เซ็นไว้ไปแสดงเหนือเส้นของผู้นิเทศ
+            const sig = document.getElementById('assessorSignature').value;
+            const sigImg = document.getElementById('print-assessorSign');
+            if(sig) { sigImg.src = sig; sigImg.classList.remove('hidden'); }
+            else { sigImg.classList.add('hidden'); }
+
             window.print();
 
             // คืนค่ากลับหลังปริ้นเสร็จ
@@ -549,6 +582,7 @@
                     ['lvl1','lvl2','lvl3','lvl4','lvl5'].forEach(id => {
                         document.getElementById(id).className = `p-3 border-2 border-gray-200 rounded-lg bg-white`;
                     });
+                    if (window.clearSignature) clearSignature();   // ล้างลายเซ็นหลังบันทึกสำเร็จ
                     setTimeout(() => msg.classList.add('hidden'), 5000);
                 })
                 .catch(err => {
@@ -560,6 +594,87 @@
                     btn.disabled = false;
                 });
         });
+
+        // ---------------- กระดานเซ็นลายเซ็น (นิ้ว/สไตลัส/เมาส์) ----------------
+        (function setupSignaturePad() {
+            const canvas = document.getElementById('sigCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const placeholder = document.getElementById('sigPlaceholder');
+            const hidden = document.getElementById('assessorSignature');
+            let drawing = false, hasInk = false, last = null;
+
+            // ปรับขนาด canvas ให้คมชัดตามจอ (เคลียร์ของเดิมเมื่อหมุนจอ/ปรับขนาด)
+            function resizeCanvas() {
+                const ratio = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                if (rect.width === 0) return;
+                canvas.width = rect.width * ratio;
+                canvas.height = rect.height * ratio;
+                ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+                ctx.lineWidth = 2.5;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.strokeStyle = '#1e293b';
+            }
+            window.addEventListener('load', resizeCanvas);
+            window.addEventListener('resize', resizeCanvas);
+            setTimeout(resizeCanvas, 300); // กันกรณีฟอนต์/เลย์เอาต์โหลดช้า
+
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            }
+
+            // ย่อรูปลายเซ็นก่อนเก็บ เพื่อไม่ให้ไฟล์ใหญ่เกินไป (เก็บลงชีตได้)
+            function exportSignature() {
+                const ratio = window.devicePixelRatio || 1;
+                const cssW = canvas.width / ratio, cssH = canvas.height / ratio;
+                const maxW = 480;
+                const scale = Math.min(1, maxW / cssW);
+                const outW = Math.round(cssW * scale), outH = Math.round(cssH * scale);
+                const tmp = document.createElement('canvas');
+                tmp.width = outW; tmp.height = outH;
+                tmp.getContext('2d').drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, outW, outH);
+                return tmp.toDataURL('image/png');
+            }
+
+            function start(e) {
+                drawing = true; last = getPos(e);
+                if (placeholder) placeholder.style.display = 'none';
+                e.preventDefault();
+            }
+            function move(e) {
+                if (!drawing) return;
+                const p = getPos(e);
+                ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+                last = p; hasInk = true;
+                e.preventDefault();
+            }
+            function end(e) {
+                if (!drawing) return;
+                drawing = false;
+                if (hasInk) hidden.value = exportSignature();
+                if (e) e.preventDefault();
+            }
+
+            canvas.addEventListener('pointerdown', start);
+            canvas.addEventListener('pointermove', move);
+            canvas.addEventListener('pointerup', end);
+            canvas.addEventListener('pointerleave', end);
+            canvas.addEventListener('pointercancel', end);
+
+            // ปุ่มล้างลายเซ็น (เรียกจาก onclick ได้)
+            window.clearSignature = function () {
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+                hasInk = false;
+                hidden.value = '';
+                if (placeholder) placeholder.style.display = '';
+            };
+        })();
     </script>
 </body>
 </html>
