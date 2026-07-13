@@ -94,7 +94,7 @@
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                         <label class="whitespace-nowrap font-semibold">กลุ่มสาระการเรียนรู้:</label>
-                        <select id="evalDept" name="evalDept" required class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent cursor-pointer">
+                        <select id="evalDept" name="evalDept" required onchange="toggleEvalDeptOther()" class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent cursor-pointer">
                             <option value="">-- เลือกกลุ่มสาระ --</option>
                             <option value="ภาษาไทย">ภาษาไทย</option>
                             <option value="คณิตศาสตร์">คณิตศาสตร์</option>
@@ -104,7 +104,10 @@
                             <option value="ศิลปะ">ศิลปะ</option>
                             <option value="การงานอาชีพ">การงานอาชีพ</option>
                             <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                            <option value="กิจกรรมพัฒนาผู้เรียน">กิจกรรมพัฒนาผู้เรียน</option>
+                            <option value="other">อื่นๆ (ระบุ)</option>
                         </select>
+                        <input type="text" id="evalDeptOther" placeholder="ระบุกลุ่มสาระ/หน่วยงาน" class="w-full border-b border-gray-300 outline-none p-1 bg-gray-50 print:bg-transparent hidden">
                     </div>
                     <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                         <label class="whitespace-nowrap font-semibold">ระดับชั้น (ที่สอน):</label>
@@ -375,6 +378,7 @@
 
             if (select.value === "") {
                 hiddenInput.value = ""; posInput.value = ""; deptInput.value = ""; classInput.value = "";
+                toggleEvalDeptOther();
                 return;
             }
 
@@ -392,6 +396,23 @@
 
             // ซ่อน dropdown และแสดง text input เพื่อให้ดูเหมือนพิมพ์เข้ามา (ตอนพิมพ์เอกสาร)
             select.classList.remove('print:hidden');
+        }
+
+        // เมื่อเลือกกลุ่มสาระ = "อื่นๆ" ให้โชว์ช่องกรอกเอง และซ่อน dropdown ตอนพิมพ์
+        function toggleEvalDeptOther() {
+            const deptSelect = document.getElementById('evalDept');
+            const otherInput = document.getElementById('evalDeptOther');
+
+            if (deptSelect.value === "other") {
+                otherInput.classList.remove('hidden');
+                otherInput.required = true;
+                deptSelect.classList.add('print:hidden');
+            } else {
+                otherInput.classList.add('hidden');
+                otherInput.required = false;
+                otherInput.value = "";
+                deptSelect.classList.remove('print:hidden');
+            }
         }
 
         // เมื่อเลือกชื่อผู้นิเทศ
@@ -562,7 +583,16 @@
                  document.getElementById('assessorName').value = document.getElementById('assessorSelect').options[document.getElementById('assessorSelect').selectedIndex].text;
             }
 
-            fetch(WEB_APP_URL, { method: 'POST', body: new FormData(this) })
+            // ถ้ากลุ่มสาระเลือก "อื่นๆ" ให้ส่งค่าที่พิมพ์เองแทน select (ปิด select ชั่วคราวไม่ให้ปนใน FormData)
+            const deptSelectEl = document.getElementById('evalDept');
+            const deptOtherEl = document.getElementById('evalDeptOther');
+            const isDeptOther = deptSelectEl.value === "other";
+            if (isDeptOther) { deptOtherEl.name = 'evalDept'; deptSelectEl.disabled = true; }
+
+            const formData = new FormData(this);
+            if (isDeptOther) { deptOtherEl.removeAttribute('name'); deptSelectEl.disabled = false; }
+
+            fetch(WEB_APP_URL, { method: 'POST', body: formData })
                 .then(res => res.json())
                 .then(data => {
                     msg.innerHTML = '<i class="fa-solid fa-circle-check text-xl mr-2"></i> บันทึกข้อมูลสำเร็จ!';
